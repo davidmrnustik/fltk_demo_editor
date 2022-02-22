@@ -43,6 +43,7 @@ void view_cb(Fl_Widget*, void *v);
 void close_cb(Fl_Widget*, void *v);
 void changed_cb(int, int nInserted, int nDeleted, int, const char*, void* v);
 void linenumbers_cb(Fl_Widget *w, void* v);
+void wordwrap_cb(Fl_Widget *w, void* v);
 
 class EditorWindow : public Fl_Double_Window {
 public:
@@ -50,7 +51,6 @@ public:
 
     ~EditorWindow();
 
-//    Fl_Window *window;
     Fl_Window *replace_dlg;
     Fl_Input *replace_find;
     Fl_Input *replace_with;
@@ -60,6 +60,7 @@ public:
     Fl_Text_Editor *editor;
     char search[256];
     int line_numbers;
+    int wrap_mode;
 };
 
 EditorWindow::EditorWindow(int w, int h, const char *t) : Fl_Double_Window(w, h, t) {
@@ -86,6 +87,7 @@ EditorWindow::EditorWindow(int w, int h, const char *t) : Fl_Double_Window(w, h,
     editor = 0;
     *search = (char)0;
     line_numbers = 0;
+    wrap_mode = 0;
 };
 
 EditorWindow::~EditorWindow() {
@@ -381,6 +383,18 @@ void linenumbers_cb(Fl_Widget *w, void* v) {
     e->redraw();
 }
 
+void wordwrap_cb(Fl_Widget *w, void* v) {
+    EditorWindow *e = (EditorWindow*)v;
+    Fl_Menu_Bar *m = (Fl_Menu_Bar*)w;
+    const Fl_Menu_Item *i = m->mvalue();
+    if (i->value())
+        e->editor->wrap_mode(Fl_Text_Editor::WRAP_AT_BOUNDS, 0);
+    else
+        e->editor->wrap_mode(Fl_Text_Editor::WRAP_NONE, 0);
+    e->wrap_mode = (i->value() ? 1 : 0);
+    e->redraw();
+}
+
 Fl_Menu_Item menuitems[] = {
     {"&File", 0, 0, 0, FL_SUBMENU },
     {"&New File", 0, (Fl_Callback *)new_cb },
@@ -400,7 +414,7 @@ Fl_Menu_Item menuitems[] = {
     { "&Delete", 0, (Fl_Callback *)delete_cb },
     { "Preferences",      0, 0, 0, FL_SUBMENU },
     { "Line Numbers",   FL_COMMAND + 'l', (Fl_Callback *)linenumbers_cb, 0, FL_MENU_TOGGLE },
-//    { "Word Wrap",      0,                (Fl_Callback *)wordwrap_cb, 0, FL_MENU_TOGGLE },
+    { "Word Wrap",      0,                (Fl_Callback *)wordwrap_cb, 0, FL_MENU_TOGGLE },
     { 0 },
     { 0 },
     { "&Search", 0, 0, 0, FL_SUBMENU },
@@ -419,6 +433,15 @@ Fl_Window* new_view()
 
     Fl_Menu_Bar *menubar = new Fl_Menu_Bar(0, 0, w->w(), 30);
     menubar->copy(menuitems, w);
+
+//    Fl_Box *box_wordwrap = new Fl_Box(w->w() - 100, 5, 100, 25, "WORD WRAP ON");
+//    box_wordwrap->box(FL_NO_BOX);
+//    box_wordwrap->show();
+//    if (w->wrap_mode)
+//        box_wordwrap->show();
+//    else
+//        box_wordwrap->hide();
+
     w->editor = new Fl_Text_Editor(0, 30, w->w(), w->h() - 30);
     w->editor->buffer(textbuf);
     w->end();
